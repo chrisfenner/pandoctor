@@ -156,11 +156,11 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 	w.cells[w.currentRow][index] = cell
 	w.written[w.currentRow][index] = true
 	// Record the newly shadowed cells, extending the array if needed.
-	for i := w.currentRow; i < w.currentRow+cell.RowSpan; i++ {
+	for i := w.currentRow; i < w.currentRow+cell.RowSpan+1; i++ {
 		if i >= len(w.shadowed) {
 			w.shadowed = append(w.shadowed, make([]bool, len(w.config.Columns)))
 		}
-		for j := index; j < index+cell.ColSpan; j++ {
+		for j := index; j < index+cell.ColSpan+1; j++ {
 			// A cell doesn't shadow itself.
 			if i == w.currentRow && j == index {
 				continue
