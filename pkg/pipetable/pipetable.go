@@ -269,6 +269,7 @@ func (w *Writer) String() (string, error) {
 
 			}
 			// Draw the +'s in the box around this cell.
+			// Note that array[x][y] is the top left inside of the cell.
 			array[x-1][y-1] = '+'
 			array[x+w.config.Columns[j].Width][y-1] = '+'
 			array[x-1][y+rowHeights[i]] = '+'
@@ -367,6 +368,7 @@ func drawCellContents(array [][]rune, x int, y int, column int, cell *Cell, colS
 	}
 	for dx, line := range lines {
 		for dy, r := range line {
+			// Draw the cell contents one space to the right of the left |.
 			array[x+1+dx][y+dy] = r
 		}
 	}
