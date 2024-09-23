@@ -18,6 +18,8 @@ var (
 	ErrNegativeSpan = errors.New("negative span")
 	// ErrOverlappingSpans indicates that two different spans overlapped.
 	ErrOverlappingSpans = errors.New("overlapping spans")
+	// ErrSpanBeyondHeader indicates that a cell in the header spanned past the end of the header.
+	ErrSpanBeyondHeader = errors.New("span extended beyond header")
 	// ErrInvalidColumnSpec indicates that a column spec was invalid.
 	ErrInvalidColumnSpec = errors.New("invalid column spec")
 	// ErrBadWrap indicates that text could not be wrapped to fit into its column.
@@ -117,6 +119,15 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 		return fmt.Errorf(
 			"%w: cell at row %d, column %d spanned %d columns, but the table has only %d",
 			ErrColumnIndexOutOfRange, w.currentRow, index, cell.ColSpan+1, len(w.config.Columns))
+	}
+
+	// Check that the cell row span doesn't straddle the header boundary (if any).
+	if w.config.NumHeaderRows != 0 {
+		if w.currentRow < w.config.NumHeaderRows && w.currentRow+cell.ColSpan > w.config.NumHeaderRows {
+			return fmt.Errorf(
+				"%w: cell at row %d, column %d spanned %d rows, but the header is only %d rows",
+				ErrSpanBeyondHeader, w.currentRow, index, cell.ColSpan+1, w.config.NumHeaderRows)
+		}
 	}
 
 	// Check for shadowing errors.
