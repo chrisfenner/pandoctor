@@ -123,10 +123,10 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 
 	// Check that the cell row span doesn't straddle the header boundary (if any).
 	if w.config.NumHeaderRows != 0 {
-		if w.currentRow < w.config.NumHeaderRows && w.currentRow+cell.ColSpan > w.config.NumHeaderRows {
+		if w.currentRow < w.config.NumHeaderRows && w.currentRow+cell.RowSpan >= w.config.NumHeaderRows {
 			return fmt.Errorf(
 				"%w: cell at row %d, column %d spanned %d rows, but the header is only %d rows",
-				ErrSpanBeyondHeader, w.currentRow, index, cell.ColSpan+1, w.config.NumHeaderRows)
+				ErrSpanBeyondHeader, w.currentRow, index, cell.RowSpan+1, w.config.NumHeaderRows)
 		}
 	}
 
@@ -141,11 +141,11 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 				ErrShadowedCell, w.currentRow, index, cell.ColSpan, w.currentRow, j)
 		}
 	}
-	for i := w.currentRow; i < w.currentRow+cell.RowSpan; i++ {
+	for i := w.currentRow; i <= w.currentRow+cell.RowSpan; i++ {
 		if i >= len(w.shadowed) {
 			break
 		}
-		for j := index; j < index+cell.ColSpan; j++ {
+		for j := index; j <= index+cell.ColSpan; j++ {
 			if w.shadowed[i][j] {
 				return fmt.Errorf("%w: two spans overlapped at row %d, column %d", ErrOverlappingSpans, i, j)
 			}

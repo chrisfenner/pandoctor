@@ -154,3 +154,53 @@ func TestWroteShadowedCell(t *testing.T) {
 		t.Errorf("WriteColumn() = %v, want %v", err, want)
 	}
 }
+
+func TestSpanOutOfHeader(t *testing.T) {
+	config := Config{
+		NumHeaderRows: 1,
+		Columns: []ColumnSpec{
+			{Width: 3},
+			{Width: 3},
+		},
+	}
+	w, err := NewWriter(config)
+	if err != nil {
+		t.Fatalf("NewWriter() = %v", err)
+	}
+	want := ErrSpanBeyondHeader
+	if err := w.WriteColumn(0, Cell{
+		Text:    "A",
+		RowSpan: 1,
+	}); !errors.Is(err, want) {
+		t.Errorf("WriteColumn() = %v, want %v", err, want)
+	}
+}
+
+func TestOverlappingSpans(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 3},
+			{Width: 3},
+		},
+	}
+	w, err := NewWriter(config)
+	if err != nil {
+		t.Fatalf("NewWriter() = %v", err)
+	}
+	if err := w.WriteColumn(1, Cell{
+		Text:    "B",
+		RowSpan: 1,
+	}); err != nil {
+		t.Fatalf("WriteColumn() = %v", err)
+	}
+	if err := w.NextRow(); err != nil {
+		t.Fatalf("NextRow() = %v", err)
+	}
+	want := ErrOverlappingSpans
+	if err := w.WriteColumn(0, Cell{
+		Text:    "C",
+		ColSpan: 1,
+	}); !errors.Is(err, want) {
+		t.Errorf("WriteColumn() = %v, want %v", err, want)
+	}
+}
