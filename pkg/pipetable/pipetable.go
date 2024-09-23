@@ -224,9 +224,9 @@ func (w *Writer) String() (string, error) {
 	// Now we can allocate a 2D array of runes and fill it in.
 	width := calculateTableWidth(w.config.Columns)
 	height := calculateTableHeight(rowHeights)
-	array := make([][]rune, height)
+	array := make([][]rune, width)
 	for y := range array {
-		array[y] = make([]rune, width)
+		array[y] = make([]rune, height)
 		for x := range array[y] {
 			array[y][x] = ' '
 		}
@@ -237,10 +237,10 @@ func (w *Writer) String() (string, error) {
 	x := 1
 	for _, col := range w.config.Columns {
 		for n := 0; n < col.Width; n++ {
-			array[0][x] = '-'
+			array[x][0] = '-'
 			x++
 		}
-		array[0][x] = '+'
+		array[x][0] = '+'
 		x++
 	}
 
@@ -248,10 +248,10 @@ func (w *Writer) String() (string, error) {
 	y := 1
 	for _, rowHeight := range rowHeights {
 		for n := 0; n < rowHeight; n++ {
-			array[y][0] = '|'
+			array[0][y] = '|'
 			y++
 		}
-		array[y][0] = '+'
+		array[0][y] = '+'
 		y++
 	}
 
@@ -269,19 +269,19 @@ func (w *Writer) String() (string, error) {
 
 			}
 			// Draw the +'s in the box around this cell.
-			array[x][y] = '+'
-			array[x+w.config.Columns[j].Width+1][y] = '+'
-			array[x][y+rowHeights[i]+1] = '+'
-			array[x+w.config.Columns[j].Width+1][y+rowHeights[i]+1] = '+'
+			array[x-1][y-1] = '+'
+			array[x+w.config.Columns[j].Width][y-1] = '+'
+			array[x-1][y+rowHeights[i]] = '+'
+			array[x+w.config.Columns[j].Width][y+rowHeights[i]] = '+'
 
 			// Draw the |'s to the right of this cell and the -'s below this cell.
 			dx := cellWidth(j, &w.cells[i][j], w.config.Columns)
 			dy := cellHeight(i, &w.cells[i][j], rowHeights)
 			for n := y; n < y+dy; n++ {
-				array[x+dx+1][n] = '|'
+				array[x+dx][n] = '|'
 			}
 			for n := x; n < x+dx; n++ {
-				array[n][y+dy+1] = '-'
+				array[n][y+dy] = '-'
 			}
 
 			x += w.config.Columns[j].Width + 1 // move the cursor to the x position of the next cell
@@ -291,8 +291,8 @@ func (w *Writer) String() (string, error) {
 
 	// Concatenate the array to a string and return it.
 	var sb strings.Builder
-	for y := 0; y < width; y++ {
-		for x := 0; x < height; x++ {
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
 			sb.WriteRune(array[x][y])
 		}
 		sb.WriteRune('\n')
@@ -325,7 +325,7 @@ func cellHeight(row int, cell *Cell, rowHeights []int) int {
 }
 
 func cellWidth(column int, cell *Cell, colSpec []ColumnSpec) int {
-	result := colSpec[column].Width - 2 // leave room for spaces on both sides of the content
+	result := colSpec[column].Width
 	for j := column + 1; j <= column+cell.ColSpan; j++ {
 		result += colSpec[j].Width
 	}
@@ -333,11 +333,14 @@ func cellWidth(column int, cell *Cell, colSpec []ColumnSpec) int {
 }
 
 func lines(column int, cell *Cell, colSpec []ColumnSpec) ([]string, error) {
-	limit := cellWidth(column, cell, colSpec)
+	limit := cellWidth(column, cell, colSpec) - 2 // leave room for spaces on both sides of the content
 	ww := wordwrap.NewWriter(limit)
 	ww.KeepNewlines = true
 
 	ww.Write([]byte(cell.Text))
+	if err := ww.Close(); err != nil {
+		return nil, fmt.Errorf("%w: text in column %d could not be wrapped", ErrBadWrap, column)
+	}
 	wrapped := ww.String()
 	lines := strings.Split(wrapped, "\n")
 	for _, line := range lines {
@@ -364,7 +367,7 @@ func drawCellContents(array [][]rune, x int, y int, column int, cell *Cell, colS
 	}
 	for dx, line := range lines {
 		for dy, r := range line {
-			array[x+dx][y+dy] = r
+			array[x+1+dx][y+dy] = r
 		}
 	}
 	return nil

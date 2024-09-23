@@ -1,6 +1,10 @@
 package pipetable
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
 
 // Build a very simple 2 by 2 table of 1 character each
 func TestBasicTable(t *testing.T) {
@@ -19,7 +23,7 @@ func TestBasicTable(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("WriteColumn() = %v", err)
 	}
-	if err := w.WriteColumn(0, Cell{
+	if err := w.WriteColumn(1, Cell{
 		Text: "B",
 	}); err != nil {
 		t.Fatalf("WriteColumn() = %v", err)
@@ -32,7 +36,7 @@ func TestBasicTable(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("WriteColumn() = %v", err)
 	}
-	if err := w.WriteColumn(0, Cell{
+	if err := w.WriteColumn(1, Cell{
 		Text: "D",
 	}); err != nil {
 		t.Fatalf("WriteColumn() = %v", err)
@@ -41,12 +45,13 @@ func TestBasicTable(t *testing.T) {
 | A | B |
 +---+---+
 | C | D |
-+---+---+`
++---+---+
+`
 	got, err := w.String()
 	if err != nil {
 		t.Fatalf("String() = %v", err)
 	}
-	if want != got {
-		t.Errorf("String() =\n%v\nwant:\n%v", got, want)
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("String() =\n%v\nwant:\n%v\ndiff (-want +got)\n%v", got, want, diff)
 	}
 }
