@@ -76,9 +76,7 @@ func NewWriter(config Config) (*Writer, error) {
 		config:     config,
 		currentRow: -1,
 	}
-	if err := w.NextRow(); err != nil {
-		return nil, err
-	}
+	w.NextRow()
 	return w, nil
 }
 
@@ -172,7 +170,7 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 }
 
 // NextRow finishes the current row and moves onto the next one.
-func (w *Writer) NextRow() error {
+func (w *Writer) NextRow() {
 	w.currentRow++
 	// The `shadowed` array might have been extended past this point already due to spans.
 	// Only extend it here if this is not the case.
@@ -181,7 +179,6 @@ func (w *Writer) NextRow() error {
 	}
 	w.cells = append(w.cells, make([]Cell, len(w.config.Columns)))
 	w.written = append(w.written, make([]bool, len(w.config.Columns)))
-	return nil
 }
 
 // String writes out the table to a string.

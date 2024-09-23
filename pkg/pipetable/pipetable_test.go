@@ -74,9 +74,7 @@ func TestBasicTable(t *testing.T) {
 			}); err != nil {
 				t.Fatalf("WriteColumn() = %v", err)
 			}
-			if err := w.NextRow(); err != nil {
-				t.Fatalf("NextRow() = %v", err)
-			}
+			w.NextRow()
 			if err := w.WriteColumn(0, Cell{
 				Text: "C",
 			}); err != nil {
@@ -193,9 +191,7 @@ func TestOverlappingSpans(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("WriteColumn() = %v", err)
 	}
-	if err := w.NextRow(); err != nil {
-		t.Fatalf("NextRow() = %v", err)
-	}
+	w.NextRow()
 	want := ErrOverlappingSpans
 	if err := w.WriteColumn(0, Cell{
 		Text:    "C",
