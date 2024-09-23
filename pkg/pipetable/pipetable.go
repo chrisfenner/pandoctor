@@ -35,8 +35,12 @@ type ColumnSpec struct {
 	Width int
 }
 
-// A Config configures the initialization of a PipeTableWriter
+// A Config configures the initialization of a PipeTableWriter.
 type Config struct {
+	// The top `NumHeaderRows` are considered to be the header of the table.
+	// 0 = no header.
+	NumHeaderRows int
+	// The specification of the columns in the table.
 	Columns []ColumnSpec
 }
 
@@ -275,14 +279,18 @@ func (w *Writer) String() (string, error) {
 			array[x-1][y+rowHeights[i]] = '+'
 			array[x+w.config.Columns[j].Width][y+rowHeights[i]] = '+'
 
-			// Draw the |'s to the right of this cell and the -'s below this cell.
+			// Draw the |'s to the right of this cell and the -'s (='s if header) below this cell.
 			dx := cellWidth(j, &w.cells[i][j], w.config.Columns)
 			dy := cellHeight(i, &w.cells[i][j], rowHeights)
 			for n := y; n < y+dy; n++ {
 				array[x+dx][n] = '|'
 			}
+			sep := '-'
+			if w.config.NumHeaderRows != 0 && w.config.NumHeaderRows == i+1+w.cells[i][j].RowSpan {
+				sep = '='
+			}
 			for n := x; n < x+dx; n++ {
-				array[n][y+dy] = '-'
+				array[n][y+dy] = sep
 			}
 
 			x += w.config.Columns[j].Width + 1 // move the cursor to the x position of the next cell
