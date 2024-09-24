@@ -251,3 +251,13 @@ func TestNegativeSpans(t *testing.T) {
 		t.Errorf("WriteColumn() = %v, want %v", err, want)
 	}
 }
+
+func TestInvalidColumnSpec(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{},
+	}
+	want := ErrInvalidColumnSpec
+	if _, err := NewWriter(config); !errors.Is(err, want) {
+		t.Errorf("NewWriter() = %v, want %v", err, want)
+	}
+}
