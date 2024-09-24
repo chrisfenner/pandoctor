@@ -382,8 +382,8 @@ func drawCellContents(array [][]rune, x int, y int, column int, cell *Cell, colS
 	if err != nil {
 		return err
 	}
-	for dx, line := range lines {
-		for dy, r := range line {
+	for dy, line := range lines {
+		for dx, r := range line {
 			// Draw the cell contents one space to the right of the left |.
 			array[x+1+dx][y+dy] = r
 		}

@@ -361,6 +361,73 @@ func TestSmallColSpanTable(t *testing.T) {
 	}
 }
 
+func TestWordWrap(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 10},
+			{Width: 10},
+		},
+	}
+	for i, tc := range []struct {
+		a    string
+		b    string
+		want string
+	}{
+		{
+			a: "lorem",
+			b: "ipsum",
+			want: `+----------+----------+
+| lorem    | ipsum    |
++----------+----------+
+`,
+		},
+		{
+			a: "lorem ipsum",
+			b: "dolor",
+			want: `+----------+----------+
+| lorem    | dolor    |
+| ipsum    |          |
++----------+----------+
+`,
+		},
+		{
+			a: "lorem ipsum",
+			b: "dolor sit amet",
+			want: `+----------+----------+
+| lorem    | dolor    |
+| ipsum    | sit amet |
++----------+----------+
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
+			w, err := NewWriter(config)
+			if err != nil {
+				t.Fatalf("NewWriter() = %v", err)
+			}
+
+			if err := w.WriteColumn(0, Cell{
+				Text: tc.a,
+			}); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			if err := w.WriteColumn(1, Cell{
+				Text: tc.b,
+			}); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+
+			got, err := w.String()
+			if err != nil {
+				t.Fatalf("String() = %v", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("String() =\n%v\nwant:\n%v\ndiff (-want +got)\n%v", got, tc.want, diff)
+			}
+		})
+	}
+}
+
 func TestColumnIndexOutOfRange(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
