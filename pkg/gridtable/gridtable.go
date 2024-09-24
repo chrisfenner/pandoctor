@@ -267,19 +267,11 @@ func (w *Writer) String() (string, error) {
 		y++
 	}
 
-	// Draw every (non-shadowed) cell, and its right and bottom pipes.
+	// Draw all the boxes.
 	y = 1
 	for i := range w.cells {
 		x = 1
 		for j := range w.config.Columns {
-			if !w.shadowed[i][j] {
-				if err := drawCellContents(array, x, y, j, &w.cells[i][j], w.config.Columns); err != nil {
-					// We expect to have hit any errors to do with the cell contents already.
-					// An error here indicates a flaw in this library itself.
-					panic(fmt.Sprintf("unexpected error painting cell at row %d, column %d: %v", i, j, err))
-				}
-
-			}
 			// Draw the +'s in the box around this cell.
 			// Note that array[x][y] is the top left inside of the cell.
 			array[x-1][y-1] = '+'
@@ -288,17 +280,33 @@ func (w *Writer) String() (string, error) {
 			array[x+w.config.Columns[j].Width][y+rowHeights[i]] = '+'
 
 			// Draw the |'s to the right of this cell and the -'s (='s if header) below this cell.
-			dx := cellWidth(j, &w.cells[i][j], w.config.Columns)
-			dy := cellHeight(i, &w.cells[i][j], rowHeights)
-			for n := y; n < y+dy; n++ {
-				array[x+dx][n] = '|'
+			for n := y; n < y+rowHeights[i]; n++ {
+				array[x+w.config.Columns[j].Width][n] = '|'
 			}
 			sep := '-'
 			if w.config.NumHeaderRows != 0 && w.config.NumHeaderRows == i+1+w.cells[i][j].RowSpan {
 				sep = '='
 			}
-			for n := x; n < x+dx; n++ {
-				array[n][y+dy] = sep
+			for n := x; n < x+w.config.Columns[j].Width; n++ {
+				array[n][y+rowHeights[i]] = sep
+			}
+
+			x += w.config.Columns[j].Width + 1 // move the cursor to the x position of the next cell
+		}
+		y += rowHeights[i] + 1 // move the cursor to the y position of the next cell
+	}
+
+	// Draw the contents of all the (non-shadowed) cells.
+	y = 1
+	for i := range w.cells {
+		x = 1
+		for j := range w.config.Columns {
+			if !w.shadowed[i][j] {
+				if err := drawCellContents(array, x, y, i, j, &w.cells[i][j], w.config.Columns, rowHeights); err != nil {
+					// We expect to have hit any errors to do with the cell contents already.
+					// An error here indicates a flaw in this library itself.
+					panic(fmt.Sprintf("unexpected error painting cell at row %d, column %d: %v", i, j, err))
+				}
 			}
 
 			x += w.config.Columns[j].Width + 1 // move the cursor to the x position of the next cell
@@ -377,7 +385,16 @@ func calculateCellHeight(column int, cell *Cell, colSpec []ColumnSpec) (int, err
 	return len(lines), nil
 }
 
-func drawCellContents(array [][]rune, x int, y int, column int, cell *Cell, colSpec []ColumnSpec) error {
+func drawCellContents(array [][]rune, x int, y int, row, column int, cell *Cell, colSpec []ColumnSpec, rowHeights []int) error {
+	// Start by erasing the interior of the cell,
+	width := cellWidth(column, cell, colSpec)
+	height := cellHeight(row, cell, rowHeights)
+	for dx := 0; dx < width; dx++ {
+		for dy := 0; dy < height; dy++ {
+			array[x+dx][y+dy] = ' '
+		}
+	}
+
 	lines, err := lines(column, cell, colSpec)
 	if err != nil {
 		return err

@@ -361,6 +361,42 @@ func TestSmallColSpanTable(t *testing.T) {
 	}
 }
 
+// Build a small table with both row and column span.
+func TestSmallDoubleSpanTable(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 3},
+			{Width: 3},
+		},
+	}
+	want := `+---+---+
+| A     |
++       +
+|       |
++---+---+
+`
+	w, err := NewWriter(config)
+	if err != nil {
+		t.Fatalf("NewWriter() = %v", err)
+	}
+	if err := w.WriteColumn(0, Cell{
+		Text:    "A",
+		RowSpan: 1,
+		ColSpan: 1,
+	}); err != nil {
+		t.Fatalf("WriteColumn() = %v", err)
+	}
+	w.NextRow()
+
+	got, err := w.String()
+	if err != nil {
+		t.Fatalf("String() = %v", err)
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("String() =\n%v\nwant:\n%v\ndiff (-want +got)\n%v", got, want, diff)
+	}
+}
+
 func TestWordWrap(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
