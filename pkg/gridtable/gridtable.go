@@ -344,7 +344,7 @@ func cellHeight(row int, cell *Cell, rowHeights []int) int {
 func cellWidth(column int, cell *Cell, colSpec []ColumnSpec) int {
 	result := colSpec[column].Width
 	for j := column + 1; j <= column+cell.ColSpan; j++ {
-		result += colSpec[j].Width
+		result += colSpec[j].Width + 1 // We get to reclaim the space where the | would go.
 	}
 	return result
 }

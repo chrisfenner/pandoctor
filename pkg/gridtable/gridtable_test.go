@@ -8,6 +8,16 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+// Small helper for finding an element in a slice.
+func contains[T comparable](ts []T, elem T) bool {
+	for _, t := range ts {
+		if t == elem {
+			return true
+		}
+	}
+	return false
+}
+
 // Build a very simple 2 by 2 table of 1 character each
 func TestBasicTable(t *testing.T) {
 	for i, tc := range []struct {
@@ -84,6 +94,157 @@ func TestBasicTable(t *testing.T) {
 				Text: "D",
 			}); err != nil {
 				t.Fatalf("WriteColumn() = %v", err)
+			}
+
+			got, err := w.String()
+			if err != nil {
+				t.Fatalf("String() = %v", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("String() =\n%v\nwant:\n%v\ndiff (-want +got)\n%v", got, tc.want, diff)
+			}
+		})
+	}
+}
+
+// Build some 2 by 2 tables with row spans.
+func TestSmallRowSpanTable(t *testing.T) {
+	for i, tc := range []struct {
+		config        Config
+		rowsWithSpans []int
+		want          string
+	}{
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{0},
+			want: `+---+---+
+| A     |
++---+---+
+| C | D |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{1},
+			want: `+---+---+
+| A | B |
++---+---+
+| C     |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{0, 1},
+			want: `+---+---+
+| A     |
++---+---+
+| C     |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				NumHeaderRows: 1,
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{0},
+			want: `+---+---+
+| A     |
++===+===+
+| C | D |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				NumHeaderRows: 2,
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{0},
+			want: `+---+---+
+| A     |
++---+---+
+| C | D |
++===+===+
+`,
+		},
+		{
+			config: Config{
+				NumHeaderRows: 2,
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			rowsWithSpans: []int{1},
+			want: `+---+---+
+| A | B |
++---+---+
+| C     |
++===+===+
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
+			w, err := NewWriter(tc.config)
+			if err != nil {
+				t.Fatalf("NewWriter() = %v", err)
+			}
+			cell := Cell{
+				Text: "A",
+			}
+			if contains(tc.rowsWithSpans, 0) {
+				cell.ColSpan = 1
+			}
+			if err := w.WriteColumn(0, cell); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			if !contains(tc.rowsWithSpans, 0) {
+				if err := w.WriteColumn(1, Cell{
+					Text: "B",
+				}); err != nil {
+					t.Fatalf("WriteColumn() = %v", err)
+				}
+			}
+			w.NextRow()
+			cell = Cell{
+				Text: "C",
+			}
+			if contains(tc.rowsWithSpans, 1) {
+				cell.ColSpan = 1
+			}
+			if err := w.WriteColumn(0, cell); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			if !contains(tc.rowsWithSpans, 1) {
+				if err := w.WriteColumn(1, Cell{
+					Text: "D",
+				}); err != nil {
+					t.Fatalf("WriteColumn() = %v", err)
+				}
 			}
 
 			got, err := w.String()
