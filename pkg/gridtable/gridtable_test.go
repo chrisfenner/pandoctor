@@ -153,6 +153,31 @@ func TestWroteShadowedCell(t *testing.T) {
 	}
 }
 
+func TestShadowedWrittenCell(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 3},
+			{Width: 3},
+		},
+	}
+	w, err := NewWriter(config)
+	if err != nil {
+		t.Fatalf("NewWriter() = %v", err)
+	}
+	if err := w.WriteColumn(1, Cell{
+		Text: "B",
+	}); err != nil {
+		t.Errorf("WriteColumn() = %v", err)
+	}
+	want := ErrShadowedCell
+	if err := w.WriteColumn(0, Cell{
+		Text:    "A",
+		ColSpan: 1,
+	}); !errors.Is(err, want) {
+		t.Errorf("WriteColumn() = %v, want %v", err, want)
+	}
+}
+
 func TestSpanOutOfHeader(t *testing.T) {
 	config := Config{
 		NumHeaderRows: 1,
@@ -196,6 +221,32 @@ func TestOverlappingSpans(t *testing.T) {
 	if err := w.WriteColumn(0, Cell{
 		Text:    "C",
 		ColSpan: 1,
+	}); !errors.Is(err, want) {
+		t.Errorf("WriteColumn() = %v, want %v", err, want)
+	}
+}
+
+func TestNegativeSpans(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 3},
+			{Width: 3},
+		},
+	}
+	w, err := NewWriter(config)
+	if err != nil {
+		t.Fatalf("NewWriter() = %v", err)
+	}
+	want := ErrNegativeSpan
+	if err := w.WriteColumn(1, Cell{
+		Text:    "B",
+		RowSpan: -1,
+	}); !errors.Is(err, want) {
+		t.Errorf("WriteColumn() = %v, want %v", err, want)
+	}
+	if err := w.WriteColumn(1, Cell{
+		Text:    "B",
+		ColSpan: -1,
 	}); !errors.Is(err, want) {
 		t.Errorf("WriteColumn() = %v, want %v", err, want)
 	}

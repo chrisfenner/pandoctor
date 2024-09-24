@@ -132,7 +132,7 @@ func (w *Writer) WriteColumn(index int, cell Cell) error {
 	if w.shadowed[w.currentRow][index] {
 		return fmt.Errorf("%w: wrote to shadowed cell at row %d, column %d", ErrShadowedCell, w.currentRow, index)
 	}
-	for j := index + 1; j < index+cell.ColSpan; j++ {
+	for j := index + 1; j <= index+cell.ColSpan; j++ {
 		if w.written[w.currentRow][j] {
 			return fmt.Errorf(
 				"%w: cell at row %d, column %d with span %d shadowed previously-written cell at row %d, column %d",
