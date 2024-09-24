@@ -428,6 +428,44 @@ func TestWordWrap(t *testing.T) {
 	}
 }
 
+func TestFailedWordWrap(t *testing.T) {
+	config := Config{
+		Columns: []ColumnSpec{
+			{Width: 10},
+		},
+	}
+	for i, tc := range []struct {
+		a string
+	}{
+		{
+			a: "loremipsumdolorsitamet",
+		},
+		{
+			a: "loremipsum",
+		},
+		{
+			a: "loremipsu",
+		},
+	} {
+		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
+			w, err := NewWriter(config)
+			if err != nil {
+				t.Fatalf("NewWriter() = %v", err)
+			}
+
+			if err := w.WriteColumn(0, Cell{
+				Text: tc.a,
+			}); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			want := ErrBadWrap
+			if _, err := w.String(); !errors.Is(err, want) {
+				t.Errorf("String() = %v, want %v", err, want)
+			}
+		})
+	}
+}
+
 func TestColumnIndexOutOfRange(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
