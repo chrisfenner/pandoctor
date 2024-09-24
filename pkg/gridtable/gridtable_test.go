@@ -258,6 +258,109 @@ func TestSmallRowSpanTable(t *testing.T) {
 	}
 }
 
+// Build some 2 by 2 tables with col spans.
+func TestSmallColSpanTable(t *testing.T) {
+	for i, tc := range []struct {
+		config        Config
+		colsWithSpans []int
+		want          string
+	}{
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			colsWithSpans: []int{0},
+			want: `+---+---+
+| A | B |
++   +---+
+|   | D |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			colsWithSpans: []int{1},
+			want: `+---+---+
+| A | B |
++---+   +
+| C |   |
++---+---+
+`,
+		},
+		{
+			config: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+			colsWithSpans: []int{0, 1},
+			want: `+---+---+
+| A | B |
++   +   +
+|   |   |
++---+---+
+`,
+		},
+	} {
+		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
+			w, err := NewWriter(tc.config)
+			if err != nil {
+				t.Fatalf("NewWriter() = %v", err)
+			}
+			cell := Cell{
+				Text: "A",
+			}
+			if contains(tc.colsWithSpans, 0) {
+				cell.RowSpan = 1
+			}
+			if err := w.WriteColumn(0, cell); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			cell = Cell{
+				Text: "B",
+			}
+			if contains(tc.colsWithSpans, 1) {
+				cell.RowSpan = 1
+			}
+			if err := w.WriteColumn(1, cell); err != nil {
+				t.Fatalf("WriteColumn() = %v", err)
+			}
+			w.NextRow()
+			if !contains(tc.colsWithSpans, 0) {
+				if err := w.WriteColumn(0, Cell{
+					Text: "C",
+				}); err != nil {
+					t.Fatalf("WriteColumn() = %v", err)
+				}
+			}
+			if !contains(tc.colsWithSpans, 1) {
+				if err := w.WriteColumn(1, Cell{
+					Text: "D",
+				}); err != nil {
+					t.Fatalf("WriteColumn() = %v", err)
+				}
+			}
+
+			got, err := w.String()
+			if err != nil {
+				t.Fatalf("String() = %v", err)
+			}
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("String() =\n%v\nwant:\n%v\ndiff (-want +got)\n%v", got, tc.want, diff)
+			}
+		})
+	}
+}
+
 func TestColumnIndexOutOfRange(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
