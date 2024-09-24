@@ -1,4 +1,4 @@
-package pipetable
+package gridtable
 
 import (
 	"errors"

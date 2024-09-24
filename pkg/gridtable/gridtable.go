@@ -1,5 +1,5 @@
-// Package pipetable implements a library for printing pipe tables.
-package pipetable
+// Package gridtable implements a library for printing grid tables.
+package gridtable
 
 import (
 	"errors"
@@ -37,7 +37,7 @@ type ColumnSpec struct {
 	Width int
 }
 
-// A Config configures the initialization of a PipeTableWriter.
+// A Config configures the initialization of a Writer.
 type Config struct {
 	// The top `NumHeaderRows` are considered to be the header of the table.
 	// 0 = no header.
@@ -46,7 +46,7 @@ type Config struct {
 	Columns []ColumnSpec
 }
 
-// Writer is an object that can be used to write out a pipe table.
+// Writer is an object that can be used to write out a grid table.
 type Writer struct {
 	config     Config
 	currentRow int
