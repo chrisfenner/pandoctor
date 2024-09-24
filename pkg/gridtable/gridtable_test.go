@@ -399,6 +399,16 @@ func TestWordWrap(t *testing.T) {
 +----------+----------+
 `,
 		},
+		{
+			a: "lorem",
+			b: "ipsum dolor sit amet",
+			want: `+----------+----------+
+| lorem    | ipsum    |
+|          | dolor    |
+|          | sit amet |
++----------+----------+
+`,
+		},
 	} {
 		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
 			w, err := NewWriter(config)
