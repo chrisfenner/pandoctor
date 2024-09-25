@@ -161,7 +161,7 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 		fmt.Fprintf(&sb, " %v", caption)
 	}
 	if id != "" {
-		fmt.Fprintf(&sb, " {%v}", id)
+		fmt.Fprintf(&sb, " {#%v}", id)
 	}
 	sb.WriteString("\n\n")
 	result, err := w.String()
