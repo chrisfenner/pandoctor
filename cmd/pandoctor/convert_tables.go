@@ -105,7 +105,7 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 				return []byte(fmt.Sprintf("Could not parse rowspan: %v", err))
 			}
 			cell := gridtable.Cell{
-				Text:    td.FirstChild.Data,
+				Text:    flatten(td),
 				RowSpan: rowspan,
 				ColSpan: colspan,
 			}
