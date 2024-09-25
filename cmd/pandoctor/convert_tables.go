@@ -54,14 +54,17 @@ func getTableNode(contents []byte) (*html.Node, error) {
 
 func rewriteHTMLTableAsGrid(contents []byte) []byte {
 	table, err := getTableNode(contents)
-	for table != nil && table.Data != "table" {
-		table = table.FirstChild
+	caption := ""
+	id := ""
+	for _, attr := range table.Attr {
+		if attr.Key == "id" {
+			id = attr.Val
+		}
 	}
-	if table == nil {
-		return []byte(fmt.Sprintf("Could not parse table: no <table> was found"))
-	}
-	if err != nil {
-		return []byte(fmt.Sprintf("Could not parse table: %v", err))
+	for child := range children(table) {
+		if child.Type == html.ElementNode && child.Data == "caption" {
+			caption = flatten(child)
+		}
 	}
 	config, err := generateTableConfig(table)
 	if err != nil {
@@ -152,11 +155,21 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 		}
 		w.NextRow()
 	}
+	var sb strings.Builder
+	sb.WriteString("Table:")
+	if caption != "" {
+		fmt.Fprintf(&sb, " %v", caption)
+	}
+	if id != "" {
+		fmt.Fprintf(&sb, " {%v}", id)
+	}
+	sb.WriteString("\n\n")
 	result, err := w.String()
 	if err != nil {
 		return []byte(fmt.Sprintf("Could not render grid table: %v", err))
 	}
-	return []byte(result)
+	sb.WriteString(result)
+	return []byte(sb.String())
 }
 
 func flatten(node *html.Node) string {
