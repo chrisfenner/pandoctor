@@ -15,6 +15,7 @@ import (
 
 var (
 	tableWidth = flag.Int("table_width", 120, "width of output tables")
+	ignoreErrors = flag.Bool("ignore_errors", false, "set to leave a table as-is if there is an error")
 )
 
 func convertTables(contents []byte) ([]byte, error) {
@@ -68,10 +69,16 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 	}
 	config, err := generateTableConfig(table)
 	if err != nil {
+		if *ignoreErrors {
+			return contents
+		}
 		return []byte(fmt.Sprintf("Could not generate table config: %v", err))
 	}
 	w, err := gridtable.NewWriter(*config)
 	if err != nil {
+		if *ignoreErrors {
+			return contents
+		}
 		return []byte(fmt.Sprintf("Could not initialize table writer: %v", err))
 	}
 	// find the (first) thead and (first) tbody
@@ -88,6 +95,9 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 		}
 	}
 	if tbody == nil {
+		if *ignoreErrors {
+			return contents
+		}
 		return []byte(fmt.Sprintf("Could not parse table: no <tbody> was found"))
 	}
 	for tr := range children(thead) {
@@ -101,10 +111,16 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 			}
 			colspan, err := numericAttribute(td.Attr, "colspan")
 			if err != nil {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte(fmt.Sprintf("Could not parse colspan: %v", err))
 			}
 			rowspan, err := numericAttribute(td.Attr, "rowspan")
 			if err != nil {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte(fmt.Sprintf("Could not parse rowspan: %v", err))
 			}
 			cell := gridtable.Cell{
@@ -113,6 +129,9 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 				ColSpan: colspan,
 			}
 			if err := w.WriteColumn(i, cell); err != nil {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte(fmt.Sprintf("Could not write cell: %v", err))
 			}
 			i += colspan
@@ -131,13 +150,22 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 			}
 			colspan, err := numericAttribute(td.Attr, "colspan")
 			if err != nil {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte(fmt.Sprintf("Could not parse colspan: %v", err))
 			}
 			rowspan, err := numericAttribute(td.Attr, "rowspan")
 			if err != nil {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte(fmt.Sprintf("Could not parse rowspan: %v", err))
 			}
 			if rowspan != 0 {
+				if *ignoreErrors {
+					return contents
+				}
 				return []byte("rowspan not currently supported")
 			}
 			if colspan != 0 {
@@ -166,6 +194,9 @@ func rewriteHTMLTableAsGrid(contents []byte) []byte {
 	sb.WriteString("\n\n")
 	result, err := w.String()
 	if err != nil {
+		if *ignoreErrors {
+			return contents
+		}
 		return []byte(fmt.Sprintf("Could not render grid table: %v", err))
 	}
 	sb.WriteString(result)
