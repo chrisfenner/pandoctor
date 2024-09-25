@@ -183,6 +183,19 @@ func (w *Writer) NextRow() {
 
 // String writes out the table to a string.
 func (w *Writer) String() (string, error) {
+	// Convenience:
+	// If the caller called NextRow() and then String(), don't show them an empty row.
+	lastRow := len(w.cells) - 1
+	anyWritten := false
+	for j := range w.config.Columns {
+		if w.written[lastRow][j] || w.shadowed[lastRow][j] {
+			anyWritten = true
+		}
+	}
+	if !anyWritten {
+		w.cells = w.cells[:len(w.cells)-1]
+	}
+
 	// Strategy: we construct a 2D array of characters and fill it in with the content of the cells,
 	// draw the boundary lines, then emit the array.
 
@@ -220,7 +233,7 @@ func (w *Writer) String() (string, error) {
 		for j := range w.config.Columns {
 			if w.cells[i][j].ColSpan > 0 {
 				heightToAdd := cellHeights[i][j] - rowHeights[i]
-				for _, rowHeight := range rowHeights[i+1 : i+w.cells[i][j].ColSpan] {
+				for _, rowHeight := range rowHeights[i+1 : i+w.cells[i][j].RowSpan+1] {
 					heightToAdd -= rowHeight + 1 // we save a row from the separator here, too.
 				}
 				if heightToAdd > 0 {
