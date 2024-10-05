@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -40,7 +39,6 @@ func resizeTables(contents []byte) ([]byte, error) {
 }
 
 func resizeGridTable(contents []byte) []byte {
-	log.Printf("Found table beginning with %v", strings.Split(string(contents), "\n")[0])
 	config, cells, err := getTable(contents)
 	if err != nil {
 		if *ignoreErrors {
@@ -78,7 +76,6 @@ func getTable(contents []byte) (*gridtable.Config, [][]*gridtable.Cell, error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("could not read table config: %v", err)
 	}
-	log.Printf("Parsed table beginning with %v", cells[0])
 	return config, cells, nil
 }
 

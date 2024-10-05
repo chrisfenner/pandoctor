@@ -101,7 +101,12 @@ func cellWidth(column int, cell *Cell, colSpec []ColumnSpec) int {
 
 func lines(column int, cell *Cell, colSpec []ColumnSpec) ([]string, error) {
 	limit := cellWidth(column, cell, colSpec) - 2 // leave room for spaces on both sides of the content
-	ww := wordwrap.NewWriter(limit)
+	ww := wordwrap.WordWrap{
+		Limit:        limit,
+		Breakpoints:  nil,
+		Newline:      []rune{'\n'},
+		KeepNewlines: true,
+	}
 	ww.KeepNewlines = true
 
 	ww.Write([]byte(cell.Text))
