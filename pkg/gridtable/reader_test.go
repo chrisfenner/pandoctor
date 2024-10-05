@@ -2,13 +2,14 @@ package gridtable
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestReadBasicTable(t *testing.T) {
+func TestReadTable(t *testing.T) {
 	for i, tc := range []struct {
 		str        string
 		want       [][]*Cell
@@ -36,6 +37,31 @@ func TestReadBasicTable(t *testing.T) {
 					{Width: 3},
 					{Width: 3},
 				},
+			},
+		},
+		{
+			str: `+---+---+
+| A | B |
++===+===+
+| C | D |
++---+---+
+`,
+			want: [][]*Cell{
+				{
+					{Text: "A"},
+					{Text: "B"},
+				},
+				{
+					{Text: "C"},
+					{Text: "D"},
+				},
+			},
+			wantConfig: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+				NumHeaderRows: 1,
 			},
 		},
 		{
@@ -136,6 +162,91 @@ func TestReadBasicTable(t *testing.T) {
 				},
 			},
 		},
+		// More complex tables, with spans.
+		{
+			str: `+---+---+
+| A     |
++---+---+
+| C | D |
++---+---+
+`,
+			want: [][]*Cell{
+				{
+					{
+						Text:    "A",
+						ColSpan: 1,
+					},
+					nil,
+				},
+				{
+					{Text: "C"},
+					{Text: "D"},
+				},
+			},
+			wantConfig: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+		},
+		{
+			str: `+---+---+
+| A     |
++---+---+
+| C     |
++---+---+
+`,
+			want: [][]*Cell{
+				{
+					{
+						Text:    "A",
+						ColSpan: 1,
+					},
+					nil,
+				},
+				{
+					{
+						Text:    "C",
+						ColSpan: 1,
+					},
+					nil,
+				},
+			},
+			wantConfig: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+		},
+		{
+			str: `+---+---+
+| A | B |
++---+---+
+| C     |
++---+---+
+`,
+			want: [][]*Cell{
+				{
+					{Text: "A"},
+					{Text: "B"},
+				},
+				{
+					{
+						Text:    "C",
+						ColSpan: 1,
+					},
+					nil,
+				},
+			},
+			wantConfig: Config{
+				Columns: []ColumnSpec{
+					{Width: 3},
+					{Width: 3},
+				},
+			},
+		},
 	} {
 		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
 			r, err := NewReader(bytes.NewReader([]byte(tc.str)))
@@ -158,6 +269,67 @@ func TestReadBasicTable(t *testing.T) {
 			}
 			if !cmp.Equal(*gotConfig, tc.wantConfig) {
 				t.Errorf("GetConfig() = %v\nwant %v", gotConfig, tc.wantConfig)
+			}
+		})
+	}
+}
+
+func TestReadMalformedTable(t *testing.T) {
+	for i, tc := range []string{
+		`+---+!--+
+| A | B |
++---+---+
+| C | D |
++---+---+
+`,
+		`+---+---+
+| A | B
++---+---+
+| C | D |
++---+---+
+`,
+		`+---+---+
+| A | B |
++---+-+-+
+| C | D |
++---+---+
+`,
+		`+---+---+
+| A | B |
++---+---+
+| C | D |
++---+----+
+`,
+		`+---+---+
+| A | B |
++   +---+
+|   | D |
++---+----+
+`,
+		`+===+===+
+| A | B |
++---+---+
+| C | D |
++---+---+
+`,
+		`+---+---+
+| A | B |
++===+===+
+| C | D |
++===+===+
+`,
+	} {
+		t.Run(fmt.Sprintf("table_%v", i), func(t *testing.T) {
+			r, err := NewReader(bytes.NewReader([]byte(tc)))
+			if err == nil {
+				for _, err = range r.Read() {
+					if err != nil {
+						break
+					}
+				}
+			}
+			if !errors.Is(err, ErrMalformedTable) {
+				t.Errorf("got %v want %v", err, ErrMalformedTable)
 			}
 		})
 	}

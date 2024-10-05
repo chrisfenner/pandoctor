@@ -66,11 +66,11 @@ func validateSeparator(line string) (cols []ColumnSpec, isHeader bool, err error
 			case !headerDecided && char == '-':
 				// OK, and remember for next time.
 				headerDecided = true
-				isHeader = false
+				isHdr = false
 			case !headerDecided && char == '=':
 				// OK, and remember for next time.
 				headerDecided = true
-				isHeader = true
+				isHdr = true
 			case headerDecided && !isHdr && char == '-':
 				// OK
 			case headerDecided && isHdr && char == '=':
@@ -207,6 +207,11 @@ func (r *Reader) Read() iter.Seq2[[]*Cell, error] {
 			}
 			r.numRows++
 			if isHdr {
+				// Check if we've already seen a header.
+				if r.config.NumHeaderRows != 0 {
+					yield(nil, fmt.Errorf("%w: table cannot have two header separator rows", ErrMalformedTable))
+					return
+				}
 				r.config.NumHeaderRows = r.numRows
 			}
 			// Yield the current row of cells.
