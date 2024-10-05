@@ -24,6 +24,11 @@ var (
 	ErrInvalidColumnSpec = errors.New("invalid column spec")
 	// ErrBadWrap indicates that text could not be wrapped to fit into its column.
 	ErrBadWrap = errors.New("text could not be wrapped")
+	// ErrMalformedTable indicates that the grid table was malformed.
+	ErrMalformedTable = errors.New("malformed grid table")
+	// ErrReaderNotDone indicates that the requested operation requires the reader to have completely consumed the table already,
+	// and it hasn't.
+	ErrReaderNotDone = errors.New("reader not done reading table")
 )
 
 const (
@@ -45,6 +50,21 @@ type Cell struct {
 	RowSpan int
 	// The number of additional columns this cell spans. 0 = no span.
 	ColSpan int
+}
+
+// String implements Stringer.
+func (c *Cell) String() string {
+	if c == nil {
+		return "[shadowed cell]"
+	}
+	spanStr := ""
+	if c.ColSpan > 0 {
+		spanStr += fmt.Sprintf("colspan=%v", c.ColSpan)
+	}
+	if c.RowSpan > 0 {
+		spanStr += fmt.Sprintf("rowspan=%v", c.RowSpan)
+	}
+	return fmt.Sprintf("%v[%v]", spanStr, c.Text)
 }
 
 func calculateTableWidth(cols []ColumnSpec) int {
@@ -128,4 +148,20 @@ func drawCellContents(array [][]rune, x int, y int, row, column int, cell *Cell,
 		}
 	}
 	return nil
+}
+
+// readCellContents performs a rectangular full-height selection of the text in the range [start, end).
+// It trims all extraneous whitespace, but preserves double-newlines.
+func readCellContents(lines [][]rune, start int, end int) string {
+	var result strings.Builder
+	for i := range lines {
+		line := strings.TrimSpace(string(lines[i][start:end]))
+		fmt.Fprintf(&result, "%v\n", line)
+	}
+	paragraphs := strings.Split(result.String(), "\n\n")
+	result.Reset()
+	for i := range paragraphs {
+		paragraphs[i] = strings.Join(strings.Fields(paragraphs[i]), " ")
+	}
+	return strings.Trim(strings.Join(paragraphs, "\n\n"), "\n")
 }

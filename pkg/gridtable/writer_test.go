@@ -19,7 +19,7 @@ func contains[T comparable](ts []T, elem T) bool {
 }
 
 // Build a very simple 2 by 2 table of 1 character each
-func TestBasicTable(t *testing.T) {
+func TestWriteBasicTable(t *testing.T) {
 	for i, tc := range []struct {
 		config Config
 		want   string
@@ -108,7 +108,7 @@ func TestBasicTable(t *testing.T) {
 }
 
 // Build some 2 by 2 tables with row spans.
-func TestSmallRowSpanTable(t *testing.T) {
+func TestWriteSmallRowSpanTable(t *testing.T) {
 	for i, tc := range []struct {
 		config        Config
 		rowsWithSpans []int
@@ -259,7 +259,7 @@ func TestSmallRowSpanTable(t *testing.T) {
 }
 
 // Build some 2 by 2 tables with col spans.
-func TestSmallColSpanTable(t *testing.T) {
+func TestWriteSmallColSpanTable(t *testing.T) {
 	for i, tc := range []struct {
 		config        Config
 		colsWithSpans []int
@@ -362,7 +362,7 @@ func TestSmallColSpanTable(t *testing.T) {
 }
 
 // Build a small table with both row and column span.
-func TestSmallDoubleSpanTable(t *testing.T) {
+func TestWriteSmallDoubleSpanTable(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -397,7 +397,7 @@ func TestSmallDoubleSpanTable(t *testing.T) {
 	}
 }
 
-func TestWordWrap(t *testing.T) {
+func TestWriteWordWrap(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 10},
@@ -474,7 +474,7 @@ func TestWordWrap(t *testing.T) {
 	}
 }
 
-func TestFailedWordWrap(t *testing.T) {
+func TestWriteFailedWordWrap(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 10},
@@ -512,7 +512,7 @@ func TestFailedWordWrap(t *testing.T) {
 	}
 }
 
-func TestColumnIndexOutOfRange(t *testing.T) {
+func TestWriteColumnIndexOutOfRange(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -543,7 +543,7 @@ func TestColumnIndexOutOfRange(t *testing.T) {
 	}
 }
 
-func TestWroteShadowedCell(t *testing.T) {
+func TestWriteWroteShadowedCell(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -568,7 +568,7 @@ func TestWroteShadowedCell(t *testing.T) {
 	}
 }
 
-func TestShadowedWrittenCell(t *testing.T) {
+func TestWriteShadowedWrittenCell(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -593,7 +593,7 @@ func TestShadowedWrittenCell(t *testing.T) {
 	}
 }
 
-func TestSpanOutOfHeader(t *testing.T) {
+func TestWriteSpanOutOfHeader(t *testing.T) {
 	config := Config{
 		NumHeaderRows: 1,
 		Columns: []ColumnSpec{
@@ -614,7 +614,7 @@ func TestSpanOutOfHeader(t *testing.T) {
 	}
 }
 
-func TestOverlappingSpans(t *testing.T) {
+func TestWriteOverlappingSpans(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -641,7 +641,7 @@ func TestOverlappingSpans(t *testing.T) {
 	}
 }
 
-func TestNegativeSpans(t *testing.T) {
+func TestWriteNegativeSpans(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{
 			{Width: 3},
@@ -667,7 +667,7 @@ func TestNegativeSpans(t *testing.T) {
 	}
 }
 
-func TestInvalidColumnSpec(t *testing.T) {
+func TestWriteInvalidColumnSpec(t *testing.T) {
 	config := Config{
 		Columns: []ColumnSpec{},
 	}
