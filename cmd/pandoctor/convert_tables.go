@@ -15,8 +15,14 @@ import (
 
 var (
 	tableWidth = flag.Int("table_width", 120, "width of output tables")
-	ignoreErrors = flag.Bool("ignore_errors", false, "set to leave a table as-is if there is an error")
 )
+
+func validateConvertTablesArgs() error {
+	if *tableWidth < 10 || *tableWidth > 200 {
+		return fmt.Errorf("--table_width of %v is not supported", *tableWidth)
+	}
+	return nil
+}
 
 func convertTables(contents []byte) ([]byte, error) {
 	tableRe := regexp.MustCompile("<table.*>\n(<.*\n)*</table>")

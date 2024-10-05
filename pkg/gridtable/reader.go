@@ -166,7 +166,7 @@ func cellsFromContent(config Config, lines [][]rune) ([]*Cell, error) {
 		}
 		dx := 0
 		for j := i; j <= i+cell.ColSpan; j++ {
-			dx += config.Columns[i].Width
+			dx += config.Columns[j].Width
 		}
 		// Don't forget the additional space made by the missing '|'s, for spanning cells.
 		dx += cell.ColSpan

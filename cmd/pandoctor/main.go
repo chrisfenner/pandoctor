@@ -11,7 +11,8 @@ import (
 )
 
 var (
-	file = flag.String("file", "", "file to update in place")
+	file         = flag.String("file", "", "file to update in place")
+	ignoreErrors = flag.Bool("ignore_errors", false, "set to leave a table as-is if there is an error")
 )
 
 func main() {
@@ -43,7 +44,16 @@ func mainErr() error {
 	action := strings.ToLower(args[0])
 	switch action {
 	case "convert_tables":
+		// TODO: reorganize the CLI commands so that these checks happen in a sensible place.
+		if err := validateConvertTablesArgs(); err != nil {
+			return err
+		}
 		newContents, err = convertTables(contents)
+	case "resize_tables":
+		if err := validateResizeTablesArgs(); err != nil {
+			return err
+		}
+		newContents, err = resizeTables(contents)
 	default:
 		return fmt.Errorf("unknown action: %q", action)
 	}
