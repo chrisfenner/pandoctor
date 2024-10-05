@@ -34,7 +34,7 @@ func validateResizeTablesArgs() error {
 }
 
 func resizeTables(contents []byte) ([]byte, error) {
-	tableRe := regexp.MustCompile("\\+[\\-\\+]+\n([|\\+].*\n)*\\+[\\-=\\+]+")
+	tableRe := regexp.MustCompile("\\+[\\-\\+]+\n([|\\+].*\n)*\\+[\\-=\\+]+\n")
 	return tableRe.ReplaceAllFunc(contents, resizeGridTable), nil
 }
 
